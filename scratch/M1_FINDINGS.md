@@ -26,7 +26,7 @@ Following a follow-up review isolating implementation gaps vs structural routing
 | **User Requests Succeeded** | **5** (25.0% success rate) | **20** (100.0% success rate) | **20** (100.0% success rate) | **Config C & Polity4j (100% Availability)** |
 | **User Requests Failed** | **15** (75.0% failure rate) | **0** (0.0% failure rate) | **0** (0.0% failure rate) | **Config C & Polity4j (0 User Failures)** |
 | **Calls Succeeded via Fallback** | **0** | **15** (requests 6–20) | **15** (requests 6–20) | **Config C & Polity4j** |
-| **User-Facing Open-Breaker Exceptions**| **14** calls (requests 7–20) | **12** calls (requests 9–20) | **0** calls | **Polity4j (0 Wasted Calls)** |
+| **User-Facing Open-Breaker Exceptions**| **13** calls (requests 8–20) | **12** calls (requests 9–20) | **0** calls | **Polity4j (0 Wasted Calls)** |
 | **Dollars Spent on Failed Calls** | **$0.0030** (3 failed attempts) | **$0.0030** (3 failed attempts) | **$0.0000** | **Polity4j ($0 Wasted Spend)** |
 | **`unreliable-cheap-backend` Used** | **0** | **15** (Fallback 1) | **0** | **Config C (Cost-conscious Fallback)** |
 | **`expensive-backend` Used** | **0** | **0** | **15** (Fallback 2) | **Polity4j** |
@@ -49,7 +49,7 @@ A third major composition risk discovered during investigation is how independen
 
 ### Mechanism & Reconciled Arithmetic
 Both DIY Config A/B and DIY Config C executed **exactly 3 real failed calls** ($0.0030 spent on failed calls) before `cheap-backend`'s circuit breaker tripped OPEN:
-- In **Config A/B**, there is no fallback handler inside the cache decorator wrapper. When `cheap-backend` fails on Request 6, `RateLimitException` propagates up to `Cache.decorateSupplier`. `resilience4j-cache` catches the uncaught exception and re-evaluates `supplier.get()` a **second time** within the same logical request to attempt recovery before raising a cache error. As a result, Request 6 executed **2 raw backend calls (Attempt 6 & Attempt 7)**, recording 2 failures in `cheapBreakerA` during Request 6 alone. Request 7 then executed Attempt 8 (failure 3), causing `cheapBreakerA` to trip OPEN on Request 7. Requests 7 through 20 (14 requests) threw `CallNotPermittedException` to the user.
+- In **Config A/B**, there is no fallback handler inside the cache decorator wrapper. When `cheap-backend` fails on Request 6, `RateLimitException` propagates up to `Cache.decorateSupplier`. `resilience4j-cache` catches the uncaught exception and re-evaluates `supplier.get()` a **second time** within the same logical request to attempt recovery before raising a cache error. As a result, Request 6 executed **2 raw backend calls (Attempt 6 & Attempt 7)**, recording 2 failures in `cheapBreakerA` during Request 6 alone. Request 7 then executed Attempt 8 (failure 3), causing `cheapBreakerA` to trip OPEN at the end of Request 7. Requests 8 through 20 (13 requests) threw `CallNotPermittedException` to the user.
 - In **Config C**, `SupplierUtils.recover(...)` catches `RateLimitException` *inside* the cache wrapper and immediately returns a valid fallback response from `unreliable-cheap-backend`. Because `Cache.decorateSupplier` receives a successful response, it never sees an exception and never triggers a second attempt. Requests 6, 7, and 8 each execute **exactly 1 primary call** (Attempts 6, 7, 8), tripping `cheapBreakerC` OPEN on Request 8. Requests 9 through 20 (12 requests) hit the open breaker before recovering via fallback.
 
 ### Conclusion on Decorator Composition
