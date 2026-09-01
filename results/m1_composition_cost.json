@@ -6,7 +6,7 @@
       "requests_failed": 15,
       "calls_succeeded_via_fallback": 0,
       "wasted_calls_into_open_breaker": 14,
-      "dollars_spent_on_failed_calls": 0.0010,
+      "dollars_spent_on_failed_calls": 0.0030,
       "fallback_1_unreliable_cheap_used_count": 0,
       "fallback_2_expensive_used_count": 0
     },
