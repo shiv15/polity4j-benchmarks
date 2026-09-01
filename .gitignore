@@ -1,0 +1,15 @@
+# Target / Build output
+target/
+*.class
+
+# IDE and Editor files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+.DS_Store
+
+# Logs
+*.log
