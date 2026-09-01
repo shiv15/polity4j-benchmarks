@@ -1,4 +1,4 @@
-# M1 Composition-Cost Benchmark Findings (Updated: 3-Column Analysis)
+# M1 Composition-Cost Benchmark Findings (Final Reconciled Report)
 
 ## Executive Summary
 
@@ -25,7 +25,7 @@ Following a follow-up review isolating implementation gaps vs structural routing
 | **User Requests Succeeded** | **5** (25.0% success rate) | **20** (100.0% success rate) | **20** (100.0% success rate) | **Config C & Polity4j (100% Availability)** |
 | **User Requests Failed** | **15** (75.0% failure rate) | **0** (0.0% failure rate) | **0** (0.0% failure rate) | **Config C & Polity4j (0 User Failures)** |
 | **Calls Succeeded via Fallback** | **0** | **15** (requests 6–20) | **15** (requests 6–20) | **Config C & Polity4j** |
-| **Wasted Calls into OPEN Breaker** | **14** calls | **12** calls | **0** calls | **Polity4j (0 Wasted Calls)** |
+| **Wasted Calls into OPEN Breaker** | **14** calls (requests 7–20) | **12** calls (requests 9–20) | **0** calls | **Polity4j (0 Wasted Calls)** |
 | **Dollars Spent on Failed Calls** | **$0.0010** | **$0.0030** | **$0.0000** | **Polity4j ($0 Wasted Spend)** |
 | **`unreliable-cheap-backend` Used** | **0** | **15** (Fallback 1) | **0** | **Config C (Cost-conscious Fallback)** |
 | **`expensive-backend` Used** | **0** | **0** | **15** (Fallback 2) | **Polity4j** |
@@ -41,8 +41,11 @@ Following a follow-up review isolating implementation gaps vs structural routing
   - Every inbound request incurs unnecessary latency and execution overhead trying a known-bad backend that has already tripped its breaker.
 - **Polity4j Advantage**: Polity4j's integrated pipeline circuit breaker short-circuits *before* backend invocation, and `FallbackChainModule` seamlessly handles failover without wasting attempts into open breakers, achieving **0 wasted calls** and **$0.00 wasted spend**.
 
-### Unreliable-Cheap Backend Usage
-- In **Config C**, `unreliable-cheap-backend` ($0.002) is invoked on requests 6–20 as Fallback 1. Because it remains healthy, it successfully satisfies all 15 fallback requests, rendering Fallback 2 (`expensive-backend` at $0.010) unused (0 calls).
+### Reconciled Discrepancy: Config A/B vs Config C Tripping Point
+- **Observation**: In Config A/B, the breaker tripped OPEN on Request 7 (14 open-breaker calls, requests 7–20, $0.0010 failed spend), whereas in Config C, the breaker tripped OPEN on Request 8 (12 open-breaker calls, requests 9–20, $0.0030 failed spend).
+- **Root Cause**: This difference is driven by `resilience4j-cache` (`Cache.decorateSupplier`) exception-retry semantics:
+  - In **Config A/B**, there is no fallback handler inside the cache decorator. When `cheap-backend` fails on Request 6, `RateLimitException` propagates out to `Cache.decorateSupplier`. `resilience4j-cache` catches the uncaught exception and re-evaluates `supplier.get()` a **second time** within the same logical request. Consequently, Request 6 executed 2 raw backend calls (Attempts 6 & 7), recording 2 failures in `cheapBreakerA` during a single request. Request 7 then executed Attempt 8 (failure 3), causing `cheapBreakerA` to trip OPEN on Request 7.
+  - In **Config C**, `SupplierUtils.recover(...)` catches `RateLimitException` *inside* the cache wrapper and immediately returns a valid fallback string from `unreliable-cheap-backend`. Because `Cache.decorateSupplier` receives a successful response, it never sees an exception and never triggers a second attempt. Requests 6, 7, and 8 each execute **exactly 1 primary call** (Attempts 6, 7, 8), tripping `cheapBreakerC` OPEN on Request 8.
 
 ---
 
@@ -66,7 +69,16 @@ Following a follow-up review isolating implementation gaps vs structural routing
 
 ---
 
-## 5. Reframed Conclusion
+## 5. Known Limitations & Subtleties
+
+1. **`resilience4j-cache` Exception Retry Behavior**:
+   - `io.github.resilience4j.cache.Cache.decorateSupplier` re-invokes its decorated supplier when an uncaught exception is thrown during evaluation. In hand-rolled stacks where `Cache` wraps `CircuitBreaker` without internal exception handling, failing requests trigger duplicate backend calls.
+2. **Contract Test Scope**:
+   - Isolated module contract tests (such as M0's `CacheContractTest`) measure happy-path caching where exceptions do not occur. In complex hand-rolled compositions, exception propagation order subtly alters circuit breaker failure counts per request.
+
+---
+
+## 6. Conclusion
 
 Hand-rolling a resilience and cost pipeline by gluing standalone libraries together introduces two distinct costs:
 1. **Implementation Friction**: Omitting explicit cross-backend fallback code (Config A/B) results in a **75% user-facing failure rate**.

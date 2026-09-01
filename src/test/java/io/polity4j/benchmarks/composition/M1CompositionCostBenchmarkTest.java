@@ -85,7 +85,6 @@ class M1CompositionCostBenchmarkTest {
             }
         }
 
-
         // --- Column 2: DIY Stack Config C (Explicit Per-Call Fallback Chain) ---
         FaultProfile cheapProfileC = FaultProfile.builder().addSuccesses(5).addFailures(FaultType.RATE_LIMITED, 15).build();
         AttemptRecorder cheapRecorderC = new AttemptRecorder();
