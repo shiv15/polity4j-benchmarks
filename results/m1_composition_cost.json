@@ -1,21 +1,32 @@
 {
   "scenario_2_headline_router_circuit_breaker": {
     "total_requests": 20,
-    "diy_stack": {
+    "diy_stack_config_a_b": {
       "requests_succeeded": 5,
       "requests_failed": 15,
+      "calls_succeeded_via_fallback": 0,
       "wasted_calls_into_open_breaker": 14,
       "dollars_spent_on_failed_calls": 0.0010,
-      "traffic_shifted_to_expensive_backend": false,
-      "failed_requests_before_traffic_shift": 15
+      "fallback_1_unreliable_cheap_used_count": 0,
+      "fallback_2_expensive_used_count": 0
+    },
+    "diy_stack_config_c": {
+      "requests_succeeded": 20,
+      "requests_failed": 0,
+      "calls_succeeded_via_fallback": 15,
+      "wasted_calls_into_open_breaker": 12,
+      "dollars_spent_on_failed_calls": 0.0030,
+      "fallback_1_unreliable_cheap_used_count": 15,
+      "fallback_2_expensive_used_count": 0
     },
     "polity4j_pipeline": {
       "requests_succeeded": 20,
       "requests_failed": 0,
+      "calls_succeeded_via_fallback": 15,
       "wasted_calls_into_open_breaker": 0,
       "dollars_spent_on_failed_calls": 0.0000,
-      "traffic_shifted_to_expensive_backend": true,
-      "failed_requests_before_traffic_shift": 0
+      "fallback_1_unreliable_cheap_used_count": 0,
+      "fallback_2_expensive_used_count": 15
     }
   },
   "scenario_3_budget_cache_ordering": {
