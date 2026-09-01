@@ -1,0 +1,50 @@
+{
+  "scenario_2_headline_router_circuit_breaker": {
+    "total_requests": 20,
+    "diy_stack": {
+      "requests_succeeded": 5,
+      "requests_failed": 15,
+      "wasted_calls_into_open_breaker": 14,
+      "dollars_spent_on_failed_calls": 0.0010,
+      "traffic_shifted_to_expensive_backend": false,
+      "failed_requests_before_traffic_shift": 15
+    },
+    "polity4j_pipeline": {
+      "requests_succeeded": 20,
+      "requests_failed": 0,
+      "wasted_calls_into_open_breaker": 0,
+      "dollars_spent_on_failed_calls": 0.0000,
+      "traffic_shifted_to_expensive_backend": true,
+      "failed_requests_before_traffic_shift": 0
+    }
+  },
+  "scenario_3_budget_cache_ordering": {
+    "config_a_cache_first": {
+      "expected_spend": 0.01,
+      "recorded_spend": 0.01,
+      "phantom_spend": 0.00
+    },
+    "config_b_budget_first": {
+      "expected_spend": 0.01,
+      "recorded_spend": 0.02,
+      "phantom_spend": 0.01
+    },
+    "polity4j_pipeline": {
+      "expected_spend": 0.01,
+      "recorded_spend": 0.01,
+      "phantom_spend": 0.00
+    }
+  },
+  "composition_cost_accounting": {
+    "diy_stack": {
+      "lines_of_code": 330,
+      "distinct_dependencies": 7,
+      "separate_config_objects": 5
+    },
+    "polity4j_pipeline": {
+      "lines_of_code": 40,
+      "distinct_dependencies": 1,
+      "separate_config_objects": 1
+    }
+  }
+}
