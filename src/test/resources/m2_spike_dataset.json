@@ -1,0 +1,222 @@
+[
+  {
+    "id": "loop_01_exact_repetition",
+    "category": "LOOP",
+    "sub_category": "exact_repetition",
+    "description": "Identical prompt/tool call submitted 4 consecutive times",
+    "expected_label": "LOOP",
+    "expected_reason": "STAGNATION_DETECTED",
+    "prompts": [
+      "Read file src/app.py to inspect main method",
+      "Read file src/app.py to inspect main method",
+      "Read file src/app.py to inspect main method",
+      "Read file src/app.py to inspect main method"
+    ]
+  },
+  {
+    "id": "loop_02_near_identical_cosmetic_args",
+    "category": "LOOP",
+    "sub_category": "near_identical",
+    "description": "Same tool call with cosmetically changing request-id parameter each time",
+    "expected_label": "LOOP",
+    "expected_reason": "STAGNATION_DETECTED",
+    "prompts": [
+      "GET /api/v1/users?req_id=1001&status=active",
+      "GET /api/v1/users?req_id=1002&status=active",
+      "GET /api/v1/users?req_id=1003&status=active",
+      "GET /api/v1/users?req_id=1004&status=active"
+    ]
+  },
+  {
+    "id": "loop_03_oscillating",
+    "category": "LOOP",
+    "sub_category": "oscillating",
+    "description": "Agent alternates between 2 tools repeatedly (A -> B -> A -> B -> A -> B)",
+    "expected_label": "LOOP",
+    "expected_reason": "STAGNATION_DETECTED",
+    "prompts": [
+      "Check server health endpoint /health",
+      "Restart application service container",
+      "Check server health endpoint /health",
+      "Restart application service container",
+      "Check server health endpoint /health",
+      "Restart application service container"
+    ]
+  },
+  {
+    "id": "loop_04_slow_drift",
+    "category": "LOOP",
+    "sub_category": "slow_drift",
+    "description": "Slightly changing search query across 6 attempts converging toward nothing",
+    "expected_label": "LOOP",
+    "expected_reason": "STAGNATION_DETECTED",
+    "prompts": [
+      "Search documentation for python regex match function",
+      "Search documentation for python regex matching syntax",
+      "Search documentation for python re.match module details",
+      "Search documentation for python re.search vs re.match",
+      "Search documentation for python regex compile pattern",
+      "Search documentation for python regex parse expression"
+    ]
+  },
+  {
+    "id": "loop_05_runaway_iteration",
+    "category": "LOOP",
+    "sub_category": "runaway_iteration",
+    "description": "Session exceeding maximum iteration cap of 10 requests",
+    "expected_label": "LOOP",
+    "expected_reason": "MAX_ITERATIONS_EXCEEDED",
+    "prompts": [
+      "Step 1: Check system status",
+      "Step 2: Read configuration file",
+      "Step 3: Analyze log entries",
+      "Step 4: Query database metrics",
+      "Step 5: Run diagnostic script A",
+      "Step 6: Run diagnostic script B",
+      "Step 7: Check network interface eth0",
+      "Step 8: Check memory usage",
+      "Step 9: Inspect disk space",
+      "Step 10: Generate summary report",
+      "Step 11: Finalize execution checklist"
+    ]
+  },
+  {
+    "id": "loop_06_high_frequency_burst",
+    "category": "LOOP",
+    "sub_category": "high_frequency",
+    "description": "11 rapid requests submitted within a 1-minute window exceeding maxRequestsPerSession=10",
+    "expected_label": "LOOP",
+    "expected_reason": "FREQUENCY_LIMIT_EXCEEDED",
+    "prompts": [
+      "Rapid query 1",
+      "Rapid query 2",
+      "Rapid query 3",
+      "Rapid query 4",
+      "Rapid query 5",
+      "Rapid query 6",
+      "Rapid query 7",
+      "Rapid query 8",
+      "Rapid query 9",
+      "Rapid query 10",
+      "Rapid query 11"
+    ]
+  },
+  {
+    "id": "loop_07_budget_runaway",
+    "category": "LOOP",
+    "sub_category": "budget_runaway",
+    "description": "Accumulated cost exceeding session budget cap of $0.10",
+    "expected_label": "LOOP",
+    "expected_reason": "MAX_COST_EXCEEDED",
+    "prompts": [
+      "Costly query 1 ($0.04)",
+      "Costly query 2 ($0.04)",
+      "Costly query 3 ($0.04)"
+    ],
+    "costs": [0.04, 0.04, 0.04]
+  },
+  {
+    "id": "nonloop_01_legitimate_iterative_work",
+    "category": "NOT_LOOP",
+    "sub_category": "iterative_work",
+    "description": "4 distinct tool steps making visible progress toward a goal",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "List directory contents of /var/log/app",
+      "Read file /var/log/app/error.log",
+      "Search codebase for error code ERR_1042",
+      "Create bug fix PR branch fix/err-1042"
+    ]
+  },
+  {
+    "id": "nonloop_02_retry_with_backoff",
+    "category": "NOT_LOOP",
+    "sub_category": "retry_with_backoff",
+    "description": "Same prompt repeated 2 times (within maxConsecutiveDuplicates=3 limit) then succeeds",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Fetch payment gateway status",
+      "Fetch payment gateway status"
+    ]
+  },
+  {
+    "id": "nonloop_03_legitimate_pagination",
+    "category": "NOT_LOOP",
+    "sub_category": "pagination",
+    "description": "Sequential API pagination requests with incrementing page numbers",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Fetch audit logs page=1 limit=50",
+      "Fetch audit logs page=2 limit=50",
+      "Fetch audit logs page=3 limit=50",
+      "Fetch audit logs page=4 limit=50"
+    ]
+  },
+  {
+    "id": "nonloop_04_legitimate_polling",
+    "category": "NOT_LOOP",
+    "sub_category": "polling",
+    "description": "Checking job status 6 times until completion (same prompt repeated 6 times)",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Check status of background export job job_88492",
+      "Check status of background export job job_88492",
+      "Check status of background export job job_88492",
+      "Check status of background export job job_88492",
+      "Check status of background export job job_88492",
+      "Check status of background export job job_88492"
+    ]
+  },
+  {
+    "id": "nonloop_05_distinct_multi_step_flow",
+    "category": "NOT_LOOP",
+    "sub_category": "multi_step_flow",
+    "description": "8 distinct requests covering a complex agent workflow within limits",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Init session context",
+      "Fetch user metadata for uid=42",
+      "Fetch user permissions",
+      "Load project template",
+      "Compile template parameters",
+      "Render project files",
+      "Run syntax validation",
+      "Deploy output package"
+    ]
+  },
+  {
+    "id": "nonloop_06_low_frequency_spaced_calls",
+    "category": "NOT_LOOP",
+    "sub_category": "spaced_calls",
+    "description": "5 distinct queries within normal session limits",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Query A",
+      "Query B",
+      "Query C",
+      "Query D",
+      "Query E"
+    ]
+  },
+  {
+    "id": "nonloop_07_low_cost_healthy_session",
+    "category": "NOT_LOOP",
+    "sub_category": "low_cost",
+    "description": "4 distinct steps with cost well below budget limit ($0.02 total)",
+    "expected_label": "NOT_LOOP",
+    "expected_reason": "NONE",
+    "prompts": [
+      "Small query 1 ($0.005)",
+      "Small query 2 ($0.005)",
+      "Small query 3 ($0.005)",
+      "Small query 4 ($0.005)"
+    ],
+    "costs": [0.005, 0.005, 0.005, 0.005]
+  }
+]
